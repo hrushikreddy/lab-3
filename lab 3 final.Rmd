@@ -1,0 +1,94 @@
+---
+title: "Spotift data analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+Spotify <- read_excel("edited_spotify.xlsx")
+```
+
+```{r}
+library(dplyr)
+MyData = {Spotify %>% 
+    group_by(Artist,AlbumName,AlbumReleaseDate) %>% 
+    summarize(AlbumSpeechiness = mean(TrackSpeechiness),
+              AlbumDuration = mean(TrackDuration),
+              AlbumInstrumentalness = mean(TrackInstrumentalness) )}
+
+```
+
+```{r}
+library(lubridate)
+MyData$AlbumReleaseDate = parse_date_time(MyData$AlbumReleaseDate,orders=c("y","ym","ymd"))
+```
+
+Here I shall plot the graphs comparing Albums speechiness, duration and its instrumentalness
+```{r}
+knitr::opts_chunk$set(echo = TRUE, fig.width = 8, fig.height = 5)
+require(dplyr)
+require(ggplot2)
+plotDuration.date <- {MyData %>% ggplot(aes(x = AlbumSpeechiness,
+                                                y = AlbumDuration))} +
+    geom_point()  + geom_smooth()
+plotDuration.date
+
+myplot <- plotDuration.date +
+        xlab("Data of album's speechiness") +
+        ylab("albums duration") +
+        ggtitle("shorter the song the less speech there is", 
+                subtitle = "Drawn from the Spotify database")
+print(myplot)
+```
+
+```{r}
+plotInstrumentalness.date <- {MyData %>% ggplot(aes(x = AlbumReleaseDate,
+                                             y = AlbumInstrumentalness))} +
+    geom_point() + geom_smooth()
+plotInstrumentalness.date
+
+myplot <- plotInstrumentalness.date +
+        xlab("Data of album's release") +
+        ylab("SInstrumentalness of an album" ) +
+        ggtitle("Regardless of the release date, most albums do not contain much instrument", 
+                subtitle = "Drawn from the Spotify database")
+print(myplot)
+```
+
+```{r}
+plotspeechiness.date <- {MyData %>% ggplot(aes(x = AlbumReleaseDate,
+                                               y = AlbumSpeechiness))} +
+    geom_point() + geom_smooth()
+plotspeechiness.date
+
+myplot <- plotspeechiness.date +
+        xlab("Data of album's release") +
+        ylab("Speechiness, as given by data from Spotify") +
+        ggtitle("Regardless of the release date, most albums contain little speech", 
+                subtitle = "Drawn from the Spotify database")
+print(myplot)
+```
+
+```{r}
+plotspeechiness.date <- {MyData %>% ggplot(aes(x = AlbumReleaseDate,
+                                               y = AlbumDuration))} +
+    geom_point() + geom_smooth()
+plotspeechiness.date
+myplot <- plotspeechiness.date +
+        xlab("Data of album's release") +
+        ylab("Speechiness, as given by data from Spotify") +
+        ggtitle("Regardless of the release date, most albums have near same duration", 
+                subtitle = "Drawn from the Spotify database")
+print(myplot)
+```
+
+```{r}
+svg(file = "Hrushik-plot.svg", width = 8, height = 5)
+print(myplot)
+dev.off()   
+```
+
